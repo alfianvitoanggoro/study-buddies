@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"net/http"
 
+	"github.com/AlfianVitoAnggoro/study-buddies/database"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 )
@@ -15,13 +15,11 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
-	PORT := env["PORT"]
-	
+
+	// Connect Database
+	database.Init()
+
 	e := echo.New()
-	e.GET("/", func(c echo.Context) error {
-		return c.JSON(http.StatusOK, map[string]any{
-			"message": "Hello, test!",
-		})
-	})
-	e.Logger.Fatal(e.Start(":"+PORT))
+
+	e.Logger.Fatal(e.Start(":" + env["PORT"]))
 }
