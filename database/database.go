@@ -1,49 +1,54 @@
 package database
 
 import (
-	"errors"
 	"fmt"
 	"os"
-	"strings"
 
+	"github.com/AlfianVitoAnggoro/study-buddies/database/model"
+	"github.com/AlfianVitoAnggoro/study-buddies/database/seeder"
 	"github.com/sirupsen/logrus"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-)
-
-var (
-	dbConnections map[string]*gorm.DB
 )
 
 func Init() {
 	// configure database with PostgresSQL
-	dbConfigurations := map[string]Db{
-		"V0": &dbPostgreSQL{
-			db: db{
-				Host: os.Getenv("DB_HOST_V0"),
-				User: os.Getenv("DB_USER_V0"),
-				Pass: os.Getenv("DB_PASS_V0"),
-				Port: os.Getenv("DB_PORT_V0"),
-				Name: os.Getenv("DB_NAME_V0"),
-			},
-			SslMode: os.Getenv("DB_SSLMODE_V0"),
-			Tz:      os.Getenv("DB_TZ_V0"),
+	dbConfigurations := &DBPostgreSQL{
+		DB: DB{
+			Host: os.Getenv("DB_HOST"),
+			User: os.Getenv("DB_USER"),
+			Pass: os.Getenv("DB_PASSWORD"),
+			Port: os.Getenv("DB_PORT"),
+			Name: os.Getenv("DB_NAME"),
 		},
+		SslMode:  os.Getenv("DB_SSL_MODE"),
+		TimeZone: os.Getenv("DB_TIME_ZONE"),
 	}
 
-	dbConnections = make(map[string]*gorm.DB)
-	for k, v := range dbConfigurations {
-		db, err := v.Init()
-		if err != nil {
-			panic(fmt.Sprintf("Failed to connect to database %s", k))
-		}
-		dbConnections[k] = db
-		logrus.Info(fmt.Sprintf("Successfully connected to database %s", k))
+	db, err := dbConfigurations.DBConnect()
+	if err != nil {
+		panic(fmt.Sprintf("Failed to connect to database %s", err))
+	}
+
+	logrus.Info(fmt.Sprintf("Successfully connected to database %s", db.Name()))
+
+	if err := model.CreateAllModel(db); err != nil {
+		logrus.Error("Migration Model failed: ", err)
+	}
+
+	// Run all seeders
+	if err := seeder.CreateAllSeeder(db); err != nil {
+		logrus.Error("Seeding failed: ", err)
 	}
 }
 
-func Connection(name string) (*gorm.DB, error) {
-	if dbConnections[strings.ToUpper(name)] == nil {
-		return nil, errors.New("Connection is undefined")
+func (dbPgsl *DBPostgreSQL) DBConnect() (*gorm.DB, error) {
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=%s", dbPgsl.Host, dbPgsl.User, dbPgsl.Pass, dbPgsl.Name, dbPgsl.Port, dbPgsl.SslMode, dbPgsl.TimeZone)
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+
+	if err != nil {
+		return nil, err
 	}
-	return dbConnections[strings.ToUpper(name)], nil
+
+	return db, nil
 }

@@ -1,5 +1,5 @@
 services:
-  web:
+  study-buddies:
     build:
       context: .
       # Correct the path to your Dockerfile
@@ -14,3 +14,30 @@ services:
     volumes:
       - .:/app
       - /app/tmp
+    depends_on:
+      - study-buddies-postgres # Ensure DB starts first
+    networks:
+      - study-buddies-net
+
+  # PostgreSQL Service
+  study-buddies-postgres:
+    container_name: study-buddies-postgres
+    image: postgres:12-alpine
+    environment:
+      - POSTGRES_USER=studybuddies
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=study_buddies
+    volumes:
+      - study-buddies-postgres:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
+    networks:
+      - study-buddies-net
+
+volumes:
+  study-buddies-postgres:
+    external: false
+
+networks:
+  study-buddies-net:
+    name: study-buddies-net
