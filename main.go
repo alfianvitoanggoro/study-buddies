@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"net/http"
 
 	"github.com/AlfianVitoAnggoro/study-buddies/database"
 	"github.com/AlfianVitoAnggoro/study-buddies/internal/http"
