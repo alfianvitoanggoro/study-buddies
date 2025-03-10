@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"os"
 
-	docs "paycools/docs"
-	"paycools/internal/app/user"
-	"paycools/internal/factory"
+	docs "github.com/AlfianVitoAnggoro/study-buddies/docs"
+	"github.com/AlfianVitoAnggoro/study-buddies/internal/app/user"
+	"github.com/AlfianVitoAnggoro/study-buddies/internal/factory"
 
 	"github.com/labstack/echo/v4"
 	echoSwagger "github.com/swaggo/echo-swagger"

@@ -1,30 +1,62 @@
 package repository
 
 import (
-	"github.com/AlfianVitoAnggoro/study-buddies/internal/abstraction"
-	"github.com/labstack/echo"
+	"github.com/AlfianVitoAnggoro/study-buddies/database/model"
 	"gorm.io/gorm"
 )
 
 type User interface {
-	FindAllUsers(c echo.Context) error
+	Find() (*[]model.User, error)
+	FindByEmail(email string) (*model.User, error)
+	Create(payload *model.User) (*model.User, error)
 }
 
 type user struct {
-	abstraction.Repository
+	db *gorm.DB
 }
 
 func NewUser(db *gorm.DB) *user {
 	return &user{
-		abstraction.Repository{
-			Db: db,
-		},
+		db,
 	}
 }
 
-type UserRepository struct {
+func (u *user) Find() (*[]model.User, error) {
+	var datas []model.User
+	query := u.db.Model(&model.User{})
+
+	err := query.Find(&datas).Error
+
+	if err != nil {
+		return &datas, err
+	}
+
+	return &datas, nil
 }
 
-func (ur *UserRepository) FindAllUsers(c echo.Context) error {
-	return nil
+func (u *user) FindByEmail(email string) (*model.User, error) {
+	var data model.User
+	query := u.db.Model(&model.User{})
+
+	err := query.Where("email = ?", email).First(&data).Error
+
+	if err != nil {
+		return &data, err
+	}
+
+	return &data, nil
+}
+
+func (u *user) Create(payload *model.User) (*model.User, error) {
+	var data model.User
+
+	query := u.db.Model(&model.User{})
+
+	err := query.Create(&payload).Error
+
+	if err != nil {
+		return &data, err
+	}
+
+	return payload, nil
 }

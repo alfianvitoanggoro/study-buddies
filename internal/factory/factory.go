@@ -11,16 +11,16 @@ type Factory struct {
 	UserRepository repository.User
 }
 
-func NewFactory() *Factory {
+func NewFactory(db *gorm.DB) *Factory {
 	f := &Factory{}
-	f.SetupDb()
+	f.SetupDb(db)
 	f.SetupRepository()
 
 	return f
 }
 
-func (f *Factory) SetupDb(Db *gorm.DB) {
-	f.Db = Db
+func (f *Factory) SetupDb(db *gorm.DB) {
+	f.Db = db
 }
 
 func (f *Factory) SetupRepository() {

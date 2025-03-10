@@ -7,7 +7,16 @@ type UserRequest struct {
 }
 
 type UserResponse struct {
-	ID    string `json:"id"`
 	Email string `json:"email"`
 	Name  string `json:"name"`
+}
+
+type UserByEmailRequest struct {
+	Email string `json:"email" param:"email" validate:"required"`
+}
+
+type UserByEmailResponse struct {
+	Email    string `json:"email"`
+	Name     string `json:"name"`
+	Password string `json:"password"`
 }
