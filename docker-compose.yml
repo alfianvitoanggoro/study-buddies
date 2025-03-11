@@ -16,6 +16,7 @@ services:
       - /app/tmp
     depends_on:
       - study-buddies-postgres # Ensure DB starts first
+      - study-buddies-redis
     networks:
       - study-buddies-net
 
@@ -33,9 +34,24 @@ services:
       - '5432:5432'
     networks:
       - study-buddies-net
+  
+  # Redis Service
+  study-buddies-redis:
+    container_name: study-buddies-redis
+    image: redis:7-alpine
+    restart: always
+    command: redis-server --save 60 1 --loglevel warning
+    ports:
+      - "6379:6379"
+    volumes:
+      - study-buddies-redis:/data
+    networks:
+      - study-buddies-net
 
 volumes:
   study-buddies-postgres:
+    external: false
+  study-buddies-redis:
     external: false
 
 networks:

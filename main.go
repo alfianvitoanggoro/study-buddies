@@ -1,12 +1,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/AlfianVitoAnggoro/study-buddies/database"
 	"github.com/AlfianVitoAnggoro/study-buddies/database/model"
 	"github.com/AlfianVitoAnggoro/study-buddies/internal/factory"
 	"github.com/AlfianVitoAnggoro/study-buddies/internal/http"
+	"github.com/AlfianVitoAnggoro/study-buddies/pkg/cache"
 	"github.com/AlfianVitoAnggoro/study-buddies/pkg/util/validator"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
@@ -17,8 +19,8 @@ import (
 //	@version		0.0.1
 //	@description	This is a documentation for Study Buddies API
 
-//	@host		localhost:8080
-//	@BasePath	/
+// @host		localhost:8080
+// @BasePath	/
 func main() {
 	// ENV
 	var env map[string]string
@@ -45,12 +47,22 @@ func main() {
 	// 	logrus.Error("Seeding failed: ", err)
 	// }
 
+	ctx := context.Background()
+
+	// Redis Connection
+	rdb, err := cache.Init(ctx)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to connect to redis database %s", err.Error()))
+	}
+
+	logrus.Info("Successfully connected to redis database")
+
 	e := echo.New()
 
 	// Validate Request
 	e.Validator = &validator.CustomValidator{Validator: validator.NewValidator()}
 
-	f := factory.NewFactory(db)
+	f := factory.NewFactory(db, ctx, rdb)
 
 	http.Init(e, f)
 

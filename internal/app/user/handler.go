@@ -39,6 +39,46 @@ func (h *handler) GetAllUsers(c echo.Context) error {
 	return c.JSON(200, result)
 }
 
+// GetUserByID get user by id
+//
+//	@Summary		Get user by id
+//	@Description	get detail  user by id
+//	@Tags			user
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"User id"
+//	@Success		200		{object}	dto.UserByIDResponse
+//	@Failure		402		{object}	response.ErrorResponse
+//	@Failure		422		{object}	response.ErrorResponse
+//	@Failure		500		{object}	response.ErrorResponse
+//	@Router			/user/{id} [get]
+func (h *handler) GetUserByID(c echo.Context) error {
+
+	payload := new(dto.UserByIDRequest)
+	if err := c.Bind(payload); err != nil {
+		return c.JSON(400, response.ErrorResponse{
+			Code:    400,
+			Message: err.Error(),
+		})
+	}
+	if err := c.Validate(payload); err != nil {
+		return c.JSON(422, response.ErrorResponse{
+			Code:    422,
+			Message: err.Error(),
+		})
+	}
+
+	result, err := h.service.GetUserByID(payload.ID)
+	if err != nil {
+		return c.JSON(422, response.ErrorResponse{
+			Code:    422,
+			Message: err.Error(),
+		})
+	}
+
+	return c.JSON(200, result)
+}
+
 // GetUserByEmail get user by email
 //
 //	@Summary		Get user
@@ -109,6 +149,46 @@ func (h *handler) CreateUser(c echo.Context) error {
 	}
 
 	result, err := h.service.CreateUser(payload)
+	if err != nil {
+		return c.JSON(422, response.ErrorResponse{
+			Code:    422,
+			Message: err.Error(),
+		})
+	}
+
+	return c.JSON(200, result)
+}
+
+// UpdateUser Update user
+//
+//	@Summary		Update user
+//	@Description	Update user to database
+//	@Tags			user
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		dto.UserUpdateRequest	true	"request body"
+//	@Success		200		{object}	dto.UserUpdateResponse
+//	@Failure		402		{object}	response.ErrorResponse
+//	@Failure		422		{object}	response.ErrorResponse
+//	@Failure		500		{object}	response.ErrorResponse
+//	@Router			/user/{id} [post]
+func (h *handler) UpdateUser(c echo.Context) error {
+
+	payload := new(dto.UserUpdateRequest)
+	if err := c.Bind(payload); err != nil {
+		return c.JSON(402, response.ErrorResponse{
+			Code:    402,
+			Message: err.Error(),
+		})
+	}
+	if err := c.Validate(payload); err != nil {
+		return c.JSON(402, response.ErrorResponse{
+			Code:    402,
+			Message: err.Error(),
+		})
+	}
+
+	result, err := h.service.UpdateUser(payload)
 	if err != nil {
 		return c.JSON(422, response.ErrorResponse{
 			Code:    422,
