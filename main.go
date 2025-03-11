@@ -9,6 +9,7 @@ import (
 	"github.com/AlfianVitoAnggoro/study-buddies/internal/factory"
 	"github.com/AlfianVitoAnggoro/study-buddies/internal/http"
 	"github.com/AlfianVitoAnggoro/study-buddies/pkg/cache"
+	"github.com/AlfianVitoAnggoro/study-buddies/pkg/elasticsearch"
 	"github.com/AlfianVitoAnggoro/study-buddies/pkg/util/validator"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
@@ -57,12 +58,21 @@ func main() {
 
 	logrus.Info("Successfully connected to redis database")
 
+	// Elastic Search Connection
+	// Redis Connection
+	es, err := elasticsearch.Init()
+	if err != nil {
+		panic(fmt.Sprintf("Failed to connect to elastic search %s", err.Error()))
+	}
+
+	logrus.Info("Successfully connected to elastic search")
+
 	e := echo.New()
 
 	// Validate Request
 	e.Validator = &validator.CustomValidator{Validator: validator.NewValidator()}
 
-	f := factory.NewFactory(db, ctx, rdb)
+	f := factory.NewFactory(db, ctx, rdb, es)
 
 	http.Init(e, f)
 
