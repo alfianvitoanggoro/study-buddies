@@ -3,6 +3,8 @@ package factory
 import (
 	"context"
 
+	"context"
+
 	"github.com/AlfianVitoAnggoro/study-buddies/internal/repository"
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/redis/go-redis/v9"
@@ -22,6 +24,7 @@ type Factory struct {
 func NewFactory(db *gorm.DB, ctx context.Context, rdb *redis.Client, es *elasticsearch.Client) *Factory {
 	f := &Factory{}
 	f.SetupDb(db)
+	f.SetupRedisDb(ctx, rdb)
 	f.SetupRedisDb(ctx, rdb)
 	f.SetupRepository()
 
