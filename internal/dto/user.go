@@ -39,7 +39,7 @@ type UserUpdateRequest struct {
 }
 
 type UserUpdateResponse struct {
-	Email    string `json:"email"`
-	Name     string `json:"name"`
-	Password string `json:"password"`
+	Email    *string `json:"email,omitempty"`
+	Name     string  `json:"name"`
+	Password string  `json:"password"`
 }

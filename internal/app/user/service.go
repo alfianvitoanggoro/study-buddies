@@ -1,6 +1,7 @@
 package user
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -9,9 +10,12 @@ import (
 	"github.com/AlfianVitoAnggoro/study-buddies/internal/dto"
 	"github.com/AlfianVitoAnggoro/study-buddies/internal/factory"
 	"github.com/AlfianVitoAnggoro/study-buddies/internal/repository"
+	"github.com/AlfianVitoAnggoro/study-buddies/pkg/log"
+	"github.com/AlfianVitoAnggoro/study-buddies/pkg/util/date"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
+	"github.com/teris-io/shortid"
 
 	"gorm.io/gorm"
 )
@@ -218,6 +222,27 @@ func (s *service) CreateUser(payload *dto.UserRequest) (*dto.UserResponse, error
 		return nil, err
 	}
 
+	// Create Audit Log Activity For Insert QR Code Transaction Log
+	reqJson, err := json.Marshal(requestModel)
+	if err != nil {
+		return nil, err
+	}
+	reqString := string(reqJson)
+
+	logActivityUser := log.LogActivity{
+		ID:        shortid.MustGenerate(),
+		TableName: requestModel.TableName(),
+		FuncName:  "CreateUser",
+		Action:    "POST",
+		NewData:   reqString,
+		UpdatedAt: *date.DateTodayLocal(),
+		CreatedAt: *date.DateTodayLocal(),
+	}
+	err = log.InsertActivityLog(context.Background(), &logActivityUser)
+	if err != nil {
+		return nil, err
+	}
+
 	go func() {
 		// Menghapus data di Redis
 		err := s.RedisRepository.Delete("getAllUsers")
@@ -250,6 +275,34 @@ func (s *service) UpdateUser(payload *dto.UserUpdateRequest) (*dto.UserUpdateRes
 		return nil, err
 	}
 
+	// Create Audit Log Activity For Insert QR Code Transaction Log
+	reqJson, err := json.Marshal(requestModel)
+	if err != nil {
+		return nil, err
+	}
+	reqString := string(reqJson)
+
+	resJson, err := json.Marshal(response)
+	if err != nil {
+		return nil, err
+	}
+	resString := string(resJson)
+
+	logActivityUser := log.LogActivity{
+		ID:        shortid.MustGenerate(),
+		TableName: requestModel.TableName(),
+		FuncName:  "UpdateUser",
+		Action:    "PUT",
+		NewData:   reqString,
+		OldData:   resString,
+		UpdatedAt: *date.DateTodayLocal(),
+		CreatedAt: *date.DateTodayLocal(),
+	}
+	err = log.InsertActivityLog(context.Background(), &logActivityUser)
+	if err != nil {
+		return nil, err
+	}
+
 	go func() {
 		// Menghapus all data di Redis
 		err := s.RedisRepository.Delete("getAllUsers")
@@ -278,7 +331,7 @@ func (s *service) UpdateUser(payload *dto.UserUpdateRequest) (*dto.UserUpdateRes
 	}()
 
 	result = &dto.UserUpdateResponse{
-		Email:    response.Email,
+		Email:    &response.Email,
 		Name:     response.Name,
 		Password: response.Password,
 	}

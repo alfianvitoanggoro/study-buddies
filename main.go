@@ -59,11 +59,7 @@ func main() {
 	logrus.Info("Successfully connected to redis database")
 
 	// Elastic Search Connection
-	// Redis Connection
-	es, err := elasticsearch.Init()
-	if err != nil {
-		panic(fmt.Sprintf("Failed to connect to elastic search %s", err.Error()))
-	}
+	elasticsearch.Init()
 
 	logrus.Info("Successfully connected to elastic search")
 
@@ -72,7 +68,7 @@ func main() {
 	// Validate Request
 	e.Validator = &validator.CustomValidator{Validator: validator.NewValidator()}
 
-	f := factory.NewFactory(db, ctx, rdb, es)
+	f := factory.NewFactory(db, ctx, rdb)
 
 	http.Init(e, f)
 

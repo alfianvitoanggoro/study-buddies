@@ -12,6 +12,7 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 	github.com/swaggo/echo-swagger v1.4.1
 	github.com/swaggo/swag v1.16.4
+	github.com/teris-io/shortid v0.0.0-20220617161101-71ec9f2aa569
 	gorm.io/driver/postgres v1.5.11
 	gorm.io/gorm v1.25.12
 )
