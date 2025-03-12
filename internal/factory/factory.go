@@ -3,8 +3,6 @@ package factory
 import (
 	"context"
 
-	"context"
-
 	"github.com/AlfianVitoAnggoro/study-buddies/internal/repository"
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/redis/go-redis/v9"

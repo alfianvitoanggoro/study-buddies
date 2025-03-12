@@ -1,6 +1,7 @@
 package elasticsearch
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -14,10 +15,19 @@ func Init() (*elasticsearch.Client, error) {
 		Addresses: []string{elasticsearchUrl}, // Ganti dengan alamat Elasticsearch
 	}
 
-	client, err := elasticsearch.NewClient(cfg)
+	es, err := elasticsearch.NewClient(cfg)
 	if err != nil {
 		log.Fatalf("Error creating the Elasticsearch client: %s", err)
 	}
 
-	return client, nil
+	// Mengecek koneksi
+	res, err := es.Info()
+	if err != nil {
+		log.Fatalf("Error connecting to Elasticsearch: %v", err)
+	}
+	defer res.Body.Close()
+
+	fmt.Println("Connected to Elasticsearch")
+
+	return es, nil
 }
