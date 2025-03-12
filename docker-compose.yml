@@ -17,6 +17,7 @@ services:
     depends_on:
       - study-buddies-postgres # Ensure DB starts first
       - study-buddies-redis
+
     networks:
       - study-buddies-net
 
@@ -34,7 +35,7 @@ services:
       - '5432:5432'
     networks:
       - study-buddies-net
-  
+
   # Redis Service
   study-buddies-redis:
     container_name: study-buddies-redis
@@ -42,16 +43,51 @@ services:
     restart: always
     command: redis-server --save 60 1 --loglevel warning
     ports:
-      - "6379:6379"
+      - '6379:6379'
     volumes:
       - study-buddies-redis:/data
     networks:
       - study-buddies-net
 
+  # Elasticsearch Service
+  study-buddies-elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.1
+    container_name: study-buddies-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false # Nonaktifkan security (untuk dev mode)
+      - bootstrap.memory_lock=true
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m # Sesuaikan dengan RAM server
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - study-buddies-elasticsearch:/usr/share/elasticsearch/data
+    ports:
+      - '9200:9200'
+    networks:
+      - study-buddies-net
+
+  # Kibana Service (Optional)
+  study-buddies-kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.1
+    container_name: study-buddies-kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://study-buddies-elasticsearch:9200
+    ports:
+      - '5601:5601'
+    networks:
+      - study-buddies-net
+    depends_on:
+      - study-buddies-elasticsearch
+
 volumes:
   study-buddies-postgres:
     external: false
   study-buddies-redis:
+    external: false
+  study-buddies-elasticsearch:
     external: false
 
 networks:
