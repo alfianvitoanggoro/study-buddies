@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/AlfianVitoAnggoro/study-buddies/database"
 	"github.com/AlfianVitoAnggoro/study-buddies/database/model"
@@ -10,6 +11,7 @@ import (
 	"github.com/AlfianVitoAnggoro/study-buddies/internal/http"
 	"github.com/AlfianVitoAnggoro/study-buddies/pkg/cache"
 	"github.com/AlfianVitoAnggoro/study-buddies/pkg/elasticsearch"
+	"github.com/AlfianVitoAnggoro/study-buddies/pkg/rabbitmq"
 	"github.com/AlfianVitoAnggoro/study-buddies/pkg/util/validator"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
@@ -62,6 +64,22 @@ func main() {
 	elasticsearch.Init()
 
 	logrus.Info("Successfully connected to elastic search")
+
+	// * RabbitMQ Connection
+	rabbitmq.Init()
+
+	logrus.Info("Successfully connected to rabbitmq")
+
+	rabbitmq.StartConsumer("class_notification", func(msg string) {
+		log.Println("📥 Received message:", msg)
+	})
+
+	done := make(chan struct{})
+
+	rabbitmq.CronJob()
+
+	<-done
+	log.Println("✅ Job selesai, exit...")
 
 	e := echo.New()
 

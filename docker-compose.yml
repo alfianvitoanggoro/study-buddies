@@ -17,6 +17,7 @@ services:
     depends_on:
       - study-buddies-postgres # Ensure DB starts first
       - study-buddies-redis
+      - study-buddies-rabbitmq
 
     networks:
       - study-buddies-net
@@ -82,6 +83,22 @@ services:
     depends_on:
       - study-buddies-elasticsearch
 
+    # RabbitMQ Service
+  study-buddies-rabbitmq:
+    image: rabbitmq:3-management
+    container_name: study-buddies-rabbitmq
+    ports:
+      - '5672:5672'     # AMQP
+      - '15672:15672'   # RabbitMQ Management UI
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - study-buddies-net
+
+
 volumes:
   study-buddies-postgres:
     external: false
@@ -89,6 +106,9 @@ volumes:
     external: false
   study-buddies-elasticsearch:
     external: false
+  rabbitmq-data:
+    external: false
+
 
 networks:
   study-buddies-net:
