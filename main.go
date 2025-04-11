@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/AlfianVitoAnggoro/study-buddies/database"
 	"github.com/AlfianVitoAnggoro/study-buddies/database/model"
@@ -11,6 +12,7 @@ import (
 	"github.com/AlfianVitoAnggoro/study-buddies/internal/http"
 	"github.com/AlfianVitoAnggoro/study-buddies/pkg/cache"
 	"github.com/AlfianVitoAnggoro/study-buddies/pkg/elasticsearch"
+	"github.com/AlfianVitoAnggoro/study-buddies/pkg/kafka"
 	"github.com/AlfianVitoAnggoro/study-buddies/pkg/rabbitmq"
 	"github.com/AlfianVitoAnggoro/study-buddies/pkg/util/validator"
 	"github.com/joho/godotenv"
@@ -32,7 +34,7 @@ func main() {
 		fmt.Println(err)
 	}
 
-	// Connect Database
+	// * Connect Database
 	db, err := database.Init()
 	if err != nil {
 		panic(fmt.Sprintf("Failed to connect to database %s", err.Error()))
@@ -40,19 +42,19 @@ func main() {
 
 	logrus.Info(fmt.Sprintf("Successfully connected to database %s", db.Name()))
 
-	// Create Model
+	// ? Create Model
 	if err := model.CreateAllModel(db); err != nil {
 		logrus.Error("Migration Model failed: ", err)
 	}
 
-	// Create Seeder Database
+	// ? Create Seeder Database
 	// if err := seeder.CreateAllSeeder(db); err != nil {
 	// 	logrus.Error("Seeding failed: ", err)
 	// }
 
 	ctx := context.Background()
 
-	// Redis Connection
+	// * Redis Connection
 	rdb, err := cache.Init(ctx)
 	if err != nil {
 		panic(fmt.Sprintf("Failed to connect to redis database %s", err.Error()))
@@ -60,7 +62,7 @@ func main() {
 
 	logrus.Info("Successfully connected to redis database")
 
-	// Elastic Search Connection
+	// * Elastic Search Connection
 	elasticsearch.Init()
 
 	logrus.Info("Successfully connected to elastic search")
@@ -74,12 +76,27 @@ func main() {
 		log.Println("📥 Received message:", msg)
 	})
 
-	done := make(chan struct{})
+	// ? CRON JOB RABBITMQ
+	// done := make(chan struct{})
 
-	rabbitmq.CronJob()
+	// rabbitmq.CronJob()
 
-	<-done
-	log.Println("✅ Job selesai, exit...")
+	// <-done
+	// log.Println("✅ Job selesai, exit...")
+
+	// * KAFKA Service
+	// Simulasi siswa daftar kelas
+	msg := kafka.ClassRegistrationMessage{
+		StudentID: "student-001",
+		ClassID:   "math-101",
+		Timestamp: time.Now().Unix(),
+	}
+
+	kafka.PublishClassRegistration(msg)
+
+	// Jalankan consumer juga di background kalau mau test di dev
+	go kafka.ConsumeClassRegistration()
+	go kafka.ConsumeScheduleRegistration()
 
 	e := echo.New()
 

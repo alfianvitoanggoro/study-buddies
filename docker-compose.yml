@@ -18,6 +18,7 @@ services:
       - study-buddies-postgres # Ensure DB starts first
       - study-buddies-redis
       - study-buddies-rabbitmq
+      - study-buddies-kafka
 
     networks:
       - study-buddies-net
@@ -94,7 +95,54 @@ services:
       - RABBITMQ_DEFAULT_USER=guest
       - RABBITMQ_DEFAULT_PASS=guest
     volumes:
-      - rabbitmq-data:/var/lib/rabbitmq
+      - study-buddies-rabbitmq:/var/lib/rabbitmq
+    networks:
+      - study-buddies-net
+
+  # KAFKA with ZOOKEEPER Service
+  study-buddies-zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.0
+    container_name: study-buddies-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - study-buddies-net
+
+  study-buddies-kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: study-buddies-kafka
+    depends_on:
+      - study-buddies-zookeeper
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: study-buddies-zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://study-buddies-kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1 # ⬅️ ini penting!
+    volumes:
+      - study-buddies-kafka:/var/lib/kafka/data
+    networks:
+      - study-buddies-net
+
+  study-buddies-kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: study-buddies-kafka-ui
+    ports:
+      - "8081:8080"  # UI akan bisa diakses di localhost:8081
+    depends_on:
+      - study-buddies-kafka
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=StudyBuddiesKafka
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=study-buddies-kafka:9092
+      - KAFKA_CLUSTERS_0_ZOOKEEPER=study-buddies-zookeeper:2181
     networks:
       - study-buddies-net
 
@@ -106,7 +154,9 @@ volumes:
     external: false
   study-buddies-elasticsearch:
     external: false
-  rabbitmq-data:
+  study-buddies-rabbitmq:
+    external: false
+  study-buddies-kafka:
     external: false
 
 

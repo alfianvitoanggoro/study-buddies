@@ -26,8 +26,8 @@ func PublishMessage(queueName, message string) error {
 
 func CronJob() {
 	c := cron.New()
-	c.AddFunc("@every 10m", func() {
-		msg := "🔔 Check upcoming classes every 10m!"
+	c.AddFunc("@every 10s", func() {
+		msg := "🔔 Check upcoming classes every 10s!"
 		PublishMessage("class_notification", msg)
 		log.Println("📤 CRON published reminder")
 	})
