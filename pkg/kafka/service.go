@@ -1,15 +1,16 @@
 package kafka
 
 import (
+	"os"
 	"time"
 
 	"github.com/segmentio/kafka-go"
 )
 
-const (
+var (
 	kafkaTopic         = "class-registration"
 	kafkaScheduleTopic = "schedule-registration"
-	kafkaBrokerAddress = "study-buddies-kafka:9092"
+	kafkaBrokerAddress = os.Getenv("KAFKA_BROKER")
 )
 
 func NewWriter() *kafka.Writer {

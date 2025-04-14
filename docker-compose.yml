@@ -18,8 +18,8 @@ services:
       - study-buddies-postgres # Ensure DB starts first
       - study-buddies-redis
       - study-buddies-rabbitmq
-      - study-buddies-kafka
-
+      # - study-buddies-kafka
+      - study-buddies-kafka-kraft
     networks:
       - study-buddies-net
 
@@ -100,35 +100,72 @@ services:
       - study-buddies-net
 
   # KAFKA with ZOOKEEPER Service
-  study-buddies-zookeeper:
-    image: confluentinc/cp-zookeeper:7.6.0
-    container_name: study-buddies-zookeeper
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    ports:
-      - "2181:2181"
-    networks:
-      - study-buddies-net
+  # study-buddies-zookeeper:
+  #   image: confluentinc/cp-zookeeper:7.6.0
+  #   container_name: study-buddies-zookeeper
+  #   environment:
+  #     ZOOKEEPER_CLIENT_PORT: 2181
+  #     ZOOKEEPER_TICK_TIME: 2000
+  #   ports:
+  #     - "2181:2181"
+  #   networks:
+  #     - study-buddies-net
 
-  study-buddies-kafka:
+  # study-buddies-kafka:
+  #   image: confluentinc/cp-kafka:7.6.0
+  #   container_name: study-buddies-kafka
+  #   depends_on:
+  #     - study-buddies-zookeeper
+  #   ports:
+  #     - "9092:9092"
+  #     - "29092:29092"
+  #   environment:
+  #     KAFKA_BROKER_ID: 1
+  #     KAFKA_ZOOKEEPER_CONNECT: study-buddies-zookeeper:2181
+  #     KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://study-buddies-kafka:9092,PLAINTEXT_HOST://localhost:29092
+  #     KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+  #     KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+  #     KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092
+  #     KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1 # ⬅️ ini penting!
+  #   volumes:
+  #     - study-buddies-kafka:/var/lib/kafka/data
+  #   networks:
+  #     - study-buddies-net
+
+  # study-buddies-kafka-ui:
+  #   image: provectuslabs/kafka-ui:latest
+  #   container_name: study-buddies-kafka-ui
+  #   ports:
+  #     - "8081:8080"  # UI akan bisa diakses di localhost:8081
+  #   depends_on:
+  #     - study-buddies-kafka
+  #   environment:
+  #     - KAFKA_CLUSTERS_0_NAME=StudyBuddiesKafka
+  #     - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=study-buddies-kafka:9092
+  #     - KAFKA_CLUSTERS_0_ZOOKEEPER=study-buddies-zookeeper:2181
+  #   networks:
+  #     - study-buddies-net
+
+  # Kafka with KRAFT Service
+  study-buddies-kafka-kraft:
     image: confluentinc/cp-kafka:7.6.0
-    container_name: study-buddies-kafka
-    depends_on:
-      - study-buddies-zookeeper
+    container_name: study-buddies-kafka-kraft
     ports:
       - "9092:9092"
       - "29092:29092"
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: study-buddies-zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://study-buddies-kafka:9092,PLAINTEXT_HOST://localhost:29092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      CLUSTER_ID: Bni5IvbwS8CT2zLB5vME5g
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@study-buddies-kafka-kraft:9093
+      KAFKA_LISTENERS: PLAINTEXT://study-buddies-kafka-kraft:9092,CONTROLLER://study-buddies-kafka-kraft:9093,PLAINTEXT_HOST://0.0.0.0:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://study-buddies-kafka-kraft:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1 # ⬅️ ini penting!
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
     volumes:
-      - study-buddies-kafka:/var/lib/kafka/data
+      - study-buddies-kafka-kraft:/var/lib/kafka/data
     networks:
       - study-buddies-net
 
@@ -136,15 +173,15 @@ services:
     image: provectuslabs/kafka-ui:latest
     container_name: study-buddies-kafka-ui
     ports:
-      - "8081:8080"  # UI akan bisa diakses di localhost:8081
-    depends_on:
-      - study-buddies-kafka
+      - "8081:8080"
     environment:
       - KAFKA_CLUSTERS_0_NAME=StudyBuddiesKafka
-      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=study-buddies-kafka:9092
-      - KAFKA_CLUSTERS_0_ZOOKEEPER=study-buddies-zookeeper:2181
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=study-buddies-kafka-kraft:9092
+    depends_on:
+      - study-buddies-kafka-kraft
     networks:
       - study-buddies-net
+
 
 
 volumes:
@@ -156,7 +193,9 @@ volumes:
     external: false
   study-buddies-rabbitmq:
     external: false
-  study-buddies-kafka:
+  # study-buddies-kafka:
+  #   external: false
+  study-buddies-kafka-kraft:
     external: false
 
 

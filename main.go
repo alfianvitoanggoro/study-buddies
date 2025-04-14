@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/AlfianVitoAnggoro/study-buddies/database"
 	"github.com/AlfianVitoAnggoro/study-buddies/database/model"
@@ -85,15 +84,6 @@ func main() {
 	// log.Println("✅ Job selesai, exit...")
 
 	// * KAFKA Service
-	// Simulasi siswa daftar kelas
-	msg := kafka.ClassRegistrationMessage{
-		StudentID: "student-001",
-		ClassID:   "math-101",
-		Timestamp: time.Now().Unix(),
-	}
-
-	kafka.PublishClassRegistration(msg)
-
 	// Jalankan consumer juga di background kalau mau test di dev
 	go kafka.ConsumeClassRegistration()
 	go kafka.ConsumeScheduleRegistration()
